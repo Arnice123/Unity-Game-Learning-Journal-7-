@@ -1,0 +1,118 @@
+public void WanderPlayer(GameObject playerPos, Animator anim, NavMeshAgent agent, GameObject self, bool HasSeenPLayer)
+    {
+        agent.isStopped = false;
+        if (coru == false)
+        {
+            coru = true;
+            agent.SetDestination(GetDest(self));            
+            
+        }
+        anim.SetBool("walk", true);
+
+        if ((Vector3.Distance(agent.transform.position, agent.destination) <= 0.5f || Vector3.Distance(agent.transform.position, agent.destination) <= -0.5f)
+                || (Mathf.Approximately(self.transform.position.x, agent.destination.x) && Mathf.Approximately(self.transform.position.z, agent.destination.z)))
+        {
+            state = State.Idle;
+            if (cro == null)
+                cro = StartCoroutine(PlayAnim(anim, "walk"));
+            agent.ResetPath();
+            coru = false;
+        }
+    }    
+
+    IEnumerator PlayAnim(Animator anim, string booleanName)
+    {
+        anim.SetBool(booleanName, true);
+        yield return new WaitForSeconds(anim.GetCurrentAnimatorStateInfo(0).length + anim.GetCurrentAnimatorStateInfo(0).normalizedTime);
+        anim.SetBool(booleanName, false);
+        cro = null;
+    }
+
+    private GameObject[] enemies;
+    private GameObject closestEnemy;
+
+    private Vector3 GetDest(GameObject self)
+    {
+        enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        float distDif = 0;
+        float curDistdif = 0;
+
+        if (enemies != null)
+            chosenDest = CloseToEnemy(distDif, curDistdif, self);
+        else
+            chosenDest = DefaultFind(self);
+               
+        return chosenDest;
+    }
+
+    public Vector3 CloseToEnemy(float distDif, float curDistdif, GameObject self)
+    {
+        closestEnemy = enemies[0];
+        foreach (GameObject g in enemies)
+        {
+            distDif = Vector3.Distance(this.transform.position, g.transform.position);
+            curDistdif = Vector3.Distance(this.transform.position, closestEnemy.transform.position);
+            if (distDif < curDistdif)
+            {
+                closestEnemy = g;
+            }
+        }
+        curDistdif = Vector3.Distance(this.transform.position, closestEnemy.transform.position);
+
+        if (curDistdif >= 60)
+        {
+            chosenDest = DefaultFind(self);
+            return chosenDest;
+        }
+
+        float AngleDif = Vector3.Angle(self.transform.position, closestEnemy.transform.position);
+
+        Quaternion start = self.transform.rotation;
+        Quaternion turnAmount = start * Quaternion.Euler(0, AngleDif, 0);
+
+        Rotate(self.transform, start, turnAmount, 1.0f);
+
+        chosenDest = new Vector3(closestEnemy.transform.position.x + Random.Range(-30, 30), closestEnemy.transform.position.y, closestEnemy.transform.position.z + Random.Range(-30, 30));
+
+        while (Vector3.Distance(chosenDest, closestEnemy.transform.position) >= 5.0f && Vector3.Distance(chosenDest, closestEnemy.transform.position) <= -5)
+        {
+            chosenDest = new Vector3(closestEnemy.transform.position.x + Random.Range(-30, 30), closestEnemy.transform.position.y, closestEnemy.transform.position.z + Random.Range(-30, 30));
+        }
+
+        return chosenDest;
+    }
+
+    public Vector3 DefaultFind(GameObject self)
+    {
+        chosenDest = new Vector3(self.transform.position.x + Random.Range(-30, 30), self.transform.position.y, self.transform.position.z + Random.Range(-30, 30));
+        checkedheight = Instantiate(invis, chosenDest, Quaternion.identity);
+
+        downRay = new Ray(checkedheight.transform.position, -transform.up);
+        upRay = new Ray(checkedheight.transform.position, transform.up);
+
+        if (Physics.Raycast(upRay, out hit) || Physics.Raycast(downRay, out hit))
+        {
+            if (hit.collider != null && hit.collider == CompareTag("Terrain"))
+            {
+                chosenDest.y = hit.point.y;
+                //chosenDest.y = hit.collider.transform.position.y;
+            }
+        }
+
+        return chosenDest;
+    }
+
+    IEnumerator Rotate(Transform self, Quaternion from, Quaternion to, float duration)
+    {
+
+        for (float t = 0; t < 1f; t += Time.deltaTime / duration)
+        {
+            // Rotate to match our current progress between from and to.
+            self.rotation = Quaternion.Slerp(from, to, t);
+            // Wait one frame before looping again.
+            yield return null;
+        }
+
+        // Ensure we finish exactly at the destination orientation.
+        self.rotation = to;
+    }
