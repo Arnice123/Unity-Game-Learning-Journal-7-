@@ -1,0 +1,17 @@
+ public void ChasePlayer(GameObject playerPos, GameObject self, Animator anim, NavMeshAgent agent, float AttackRange, float inRange, float inView, bool HasSeenPLayer)
+    {
+        agent.SetDestination(playerPos.transform.position);
+        //StartCoroutine(PlayAnim(anim, "walk"));
+        anim.SetBool("walk", true);
+
+        distDif = Vector3.Distance(playerPos.transform.position, self.transform.position);
+        if (PlayerPos.FindPlayerPos(AttackRange, playerPos.transform, inView, self, HasSeenPLayer))
+        {
+            state = State.Attack;
+        }
+
+        if (!PlayerPos.FindPlayerPos(inRange, playerPos.transform, inView, self, HasSeenPLayer))
+        {
+            state = State.Idle;
+        }
+    }
