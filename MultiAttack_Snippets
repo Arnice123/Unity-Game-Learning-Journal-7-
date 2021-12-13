@@ -1,1 +1,98 @@
+ public void AttackPlayer(GameObject playerPos, Animator anim, NavMeshAgent agent, GameObject self, bool MultiAttack, float inRange, float inView, float AttackRange, bool isBlocking, bool HasSeenPLayer)
+    {
+        distDif = Vector3.Distance(self.transform.position, playerPos.transform.position);
 
+        if (distDif >= AttackRange)
+        {
+            agent.SetDestination(playerPos.transform.position);            
+        }
+
+        else if (distDif <= AttackRange)
+        {
+            anim.SetBool("walk", false);
+        }
+
+        if (MultiAttack)
+        {
+            MultAttack(playerPos, anim, agent, self, inRange, inView);            
+        }
+        else
+        {
+            anim.SetBool("Attack2", false);
+            anim.SetBool("Attack3", false);
+            StartCoroutine(PlayAnim(anim, "Attack"));
+        }
+        
+        if (!PlayerPos.FindPlayerPos(AttackRange, playerPos.transform, inView, self, HasSeenPLayer))
+        {
+            anim.SetBool("Attack", false);
+            anim.SetBool("Attack2", false);
+            anim.SetBool("Attack3", false);
+            state = State.Chase;
+        }
+    }
+
+    public void MultAttack(GameObject playerPos, Animator anim, NavMeshAgent agent, GameObject self, float inRange, float inView)
+    {      
+        if (random == 0) random = Random.Range(1, 5);
+
+        if (random == 1)
+        {
+            StartCoroutine(PlayAnim(anim, "Attack"));
+            random = 0;            
+            return;
+        }
+
+        if (random == 2)
+        {
+            if (HasParameter("Attack2", anim))
+            {
+                StartCoroutine(PlayAnim(anim, "Attack2"));
+                random = 0;
+                return;
+            }
+
+            StartCoroutine(PlayAnim(anim, "Attack"));
+            random = 0;
+            return;
+        }
+
+        if (random == 3)
+        {
+            if (alk != null)
+            {
+                Debug.Log("This runs");
+                
+                alk.particle.gameObject.SetActive(true);
+                alk.particle.Play();
+                StartCoroutine(PlayAnim(anim, "Attack3"));
+                alk.particle.Stop();
+                alk.particle.gameObject.SetActive(false);
+                random = 0;
+                return;
+            }
+
+            if (HasParameter("Attack3", anim))
+            {
+                StartCoroutine(PlayAnim(anim, "Attack3"));
+                random = 0;
+                return;
+            }
+
+            StartCoroutine(PlayAnim(anim, "Attack"));
+            random = 0;
+            return;
+        }
+
+        if (random == 4)
+        {
+            BlockPlayer(playerPos, anim, agent, inRange, inView, self);
+            random = 0;
+            return;
+        }
+
+        StartCoroutine(PlayAnim(anim, "Attack"));
+        random = 0;
+        return;
+
+    }
