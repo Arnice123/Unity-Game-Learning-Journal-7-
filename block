@@ -1,0 +1,13 @@
+ public void BlockPlayer(GameObject playerPos, Animator anim, NavMeshAgent agent, float inRange, float inView, GameObject self)
+    {
+        if (HasParameter("Block", anim))
+            StartCoroutine(PlayAnim(anim, "Block"));
+
+        if (HasParameter("BlockAttack", anim))
+            StartCoroutine(PlayAnim(anim, "BlockAttack"));
+
+        if (HasParameter("Attack", anim))
+            StartCoroutine(PlayAnim(anim, "Attack"));
+
+        state = State.Attack;
+    }
